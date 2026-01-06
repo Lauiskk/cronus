@@ -1,6 +1,7 @@
 defmodule Cronus.Monitoring.Worker do
   use GenServer
   require Logger
+  alias Cronus.Monitoring.Checker
 
   defstruct [:id, :url, :interval, :status, :last_check]
 
@@ -36,7 +37,18 @@ defmodule Cronus.Monitoring.Worker do
 
   @impl true
   def handle_info(:tick, state) do
-    Logger.info("Executando verificação em #{state.url}...")
+
+    Logger.info("Verificando #{state.url}...")
+    result = Checker.check(state.url)
+
+    case result do
+      {:ok, status, milliseconds} ->
+        Logger.info("#{state.url} está online (#{status} - #{milliseconds}ms)")
+        state = %{state | status: :online, last_check: DateTime.utc_now()}
+      {:error, status, milliseconds} ->
+        Logger.info("#{state.url} está offline (#{status} - #{milliseconds}ms)")
+        state = %{state | status: :offline, last_check: DateTime.utc_now()}
+    end
 
     Process.send_after(self(), :tick, state.interval)
 
