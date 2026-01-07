@@ -17,6 +17,7 @@ defmodule Cronus.Application do
       # Start to serve requests, typically the last entry
       {Registry, keys: :unique, name: Cronus.Registry},
       Cronus.Monitoring.Supervisor,
+      Cronus.Monitoring.Hydrator,
       CronusWeb.Endpoint
     ]
 

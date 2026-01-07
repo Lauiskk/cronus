@@ -12,5 +12,6 @@ defmodule Cronus.Monitoring.Supervisor do
   def start_worker(config) do
     spec = {Cronus.Monitoring.Worker, config}
     DynamicSupervisor.start_child(__MODULE__, spec)
+    Cronus.Monitoring.Hydrator
   end
 end

@@ -39,22 +39,24 @@ defmodule Cronus.Monitoring.Worker do
   @impl true
   def handle_info(:tick, state) do
     Logger.info("Verificando #{state.url}...")
-    result = Checker.check(state.url)
 
-    state =
-      case result do
-        {:ok, status, milliseconds} ->
-          Logger.info("#{state.url} está online (#{status} - #{milliseconds}ms)")
-          %{state | status: :online, last_check: DateTime.utc_now()}
-
-        {:error, status, milliseconds} ->
-          Logger.info("#{state.url} está offline (#{status} - #{milliseconds}ms)")
-          %{state | status: :offline, last_check: DateTime.utc_now()}
+    {_verdict, code, latency} =
+      case Checker.check(state.url) do
+        {:ok, code, latency} -> {:online, code, latency}
+        {:error, code, latency} -> {:offline, code, latency}
       end
+
+    site = Cronus.Repo.get!(Cronus.Sites.Site, state.id)
+
+    Cronus.Sites.Site.changeset(site, %{
+      last_status: code,
+      last_latency: latency,
+      last_checked_at: DateTime.utc_now()
+    })
+    |> Cronus.Repo.update()
 
     Process.send_after(self(), :tick, state.interval)
 
-    Phoenix.PubSub.broadcast(Cronus.PubSub, "monitoring", {:check_result, result})
     {:noreply, state}
   end
 end

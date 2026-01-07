@@ -9,6 +9,9 @@ defmodule Cronus.Sites.Site do
     field :name, :string
     field :interval, :integer
     field :active, :boolean, default: false
+    field :last_status, :integer
+    field :last_latency, :integer
+    field :last_checked_at, :utc_datetime
 
     timestamps(type: :utc_datetime)
   end
@@ -16,7 +19,15 @@ defmodule Cronus.Sites.Site do
   @doc false
   def changeset(site, attrs) do
     site
-    |> cast(attrs, [:url, :name, :interval, :active])
+    |> cast(attrs, [
+      :url,
+      :name,
+      :interval,
+      :active,
+      :last_status,
+      :last_latency,
+      :last_checked_at
+    ])
     |> validate_required([:url, :name, :interval, :active])
   end
 end
