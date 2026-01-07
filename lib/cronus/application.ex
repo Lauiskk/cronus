@@ -15,6 +15,8 @@ defmodule Cronus.Application do
       # Start a worker by calling: Cronus.Worker.start_link(arg)
       # {Cronus.Worker, arg},
       # Start to serve requests, typically the last entry
+      {Registry, keys: :unique, name: Cronus.Registry},
+      Cronus.Monitoring.Supervisor,
       CronusWeb.Endpoint
     ]
 
