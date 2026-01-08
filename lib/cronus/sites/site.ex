@@ -28,6 +28,6 @@ defmodule Cronus.Sites.Site do
       :last_latency,
       :last_checked_at
     ])
-    |> validate_required([:url, :name, :interval, :active])
+    |> validate_required([:url, :name, :interval])
   end
 end

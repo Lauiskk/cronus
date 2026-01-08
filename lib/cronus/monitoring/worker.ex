@@ -22,9 +22,9 @@ defmodule Cronus.Monitoring.Worker do
            }}
   def init(args) do
     state = %__MODULE__{
-      id: args[:id],
-      url: args[:url],
-      interval: args[:interval] || 60_000,
+      id: args.id,
+      url: args.url,
+      interval: args.interval || 60_000,
       status: :unknown,
       last_check: nil
     }
@@ -47,13 +47,21 @@ defmodule Cronus.Monitoring.Worker do
       end
 
     site = Cronus.Repo.get!(Cronus.Sites.Site, state.id)
+    checked_at = DateTime.utc_now()
 
     Cronus.Sites.Site.changeset(site, %{
       last_status: code,
       last_latency: latency,
-      last_checked_at: DateTime.utc_now()
+      last_checked_at: checked_at
     })
     |> Cronus.Repo.update()
+
+    Phoenix.PubSub.broadcast(Cronus.PubSub, "monitoring", {:check_result, %{
+      site_id: state.id,
+      status: code,
+      latency: latency,
+      checked_at: checked_at
+    }})
 
     Process.send_after(self(), :tick, state.interval)
 
